@@ -6,6 +6,8 @@ import pandas as pd
 import seaborn as sns
 
 KEY_SWAP = 'x'
+KEY_UNDO = 'u'
+KEY_REDO = 'r'
 KEY_QUALITY_GOOD = '1'
 KEY_QUALITY_MEDIUM = '2'
 KEY_QUALITY_BAD = '3'
@@ -17,6 +19,8 @@ KEY_ANNOTATION_STRIKETHROUGH = 'f'
 
 ui_text = {}
 ui_text[KEY_SWAP] = 'swap images'
+ui_text[KEY_UNDO] = 'undo last annotation'
+ui_text[KEY_REDO] = 'redo last undo'
 ui_text[KEY_QUALITY_GOOD] = 'good quality'
 ui_text[KEY_QUALITY_MEDIUM] = 'medium quality'
 ui_text[KEY_QUALITY_BAD] = 'bad quality'
@@ -46,6 +50,8 @@ current_mode = 'good'
 current_type = 'highlight'
 
 annotations = pd.DataFrame(columns=['x', 'y', 'type', 'quality'])
+annotations_undo_stack = pd.DataFrame(columns=['x', 'y', 'type', 'quality'])
+
 
 def create_annotation(x, y, t, q):
     global annotations
@@ -91,6 +97,18 @@ def update_plot():
             continue
         annotation_plot[mode].set_offsets(np.c_[x_values, y_values])
 
+def undo():
+    global annotations, annotations_undo_stack
+    annotations_undo_stack = annotations_undo_stack.append(annotations[-1:])
+    annotations = annotations[:-1]
+    update_plot()
+
+def redo():
+    global annotations, annotations_undo_stack
+    annotations = annotations.append(annotations_undo_stack[-1:])
+    annotations_undo_stack = annotations_undo_stack[:-1]
+    update_plot()
+
 def on_press(event):
     global current_mode
     global current_type
@@ -100,6 +118,10 @@ def on_press(event):
     if event.key == KEY_SWAP:
         img_handle_1.set_visible(not img_handle_1.get_visible())
         img_handle_2.set_visible(not img_handle_2.get_visible())
+    elif event.key == KEY_UNDO:
+        undo()
+    elif event.key == KEY_REDO:
+        redo()
     elif event.key == KEY_QUALITY_GOOD:
         current_mode = 'good'
     elif event.key == KEY_QUALITY_MEDIUM:
@@ -128,6 +150,10 @@ def on_click(event):
     if event.button is MouseButton.LEFT:
         print(event.xdata, event.ydata)
         #coords[current_mode].append([event.xdata, event.ydata])
+
+        # clear undo stack when new annotation is made
+        annotations_undo_stack.drop(annotations_undo_stack.index, inplace=True)
+
         create_annotation(event.xdata, event.ydata, current_type, current_mode)
         update_plot()
         fig.canvas.draw()
