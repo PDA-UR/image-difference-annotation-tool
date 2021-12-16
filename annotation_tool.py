@@ -104,6 +104,9 @@ fig, ax = plt.subplots()
 fig.canvas.mpl_connect('key_press_event', on_press)
 plt.connect('button_press_event', on_click)
 
+plt.rcParams['keymap.save'].remove('s')
+plt.rcParams['keymap.fullscreen'].remove('f')
+
 img_handle_1 = plt.imshow(img_1)
 img_handle_2 = plt.imshow(img_2)
 img_handle_2.set_visible(False)
