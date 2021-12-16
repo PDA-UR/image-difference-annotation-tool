@@ -46,21 +46,23 @@ coords['false_positive'] = []
 current_mode = 'good'
 current_type = 'highlight'
 
-def create_labels(fig):
-    x_pos = -2000
+def create_labels(ax):
+    x_size = ax.get_xlim()[1]
+    y_size = ax.get_ylim()[0]
+    x_pos = -0.8 * x_size
     x_offset_key = x_pos
-    x_offset_text = x_pos + 150
-    y_pos = fig.get_size_inches() * fig.dpi
+    x_offset_text = x_pos + (x_size / 15)
+    y_pos = 0.1 * y_size
+
     for key, text in labels.items():
-        print(key, text)
         color = 'black'
         # TODO update text on keypress to make this work
         #if(current_mode in text or current_type in text):
         #    color = 'blue'
 
-        plt.text(x_offset_key, y_pos[1], f'{key}', fontsize=18, c=color)
-        plt.text(x_offset_text, y_pos[1], f'{text}', fontsize=18, c=color)
-        y_pos += 150
+        plt.text(x_offset_key, y_pos, f'{key}', fontsize=18, c=color)
+        plt.text(x_offset_text, y_pos, f'{text}', fontsize=18, c=color)
+        y_pos += (y_size / 20)
 
 def update_plot():
     global annotation_plot
@@ -112,6 +114,6 @@ annotation_plot['medium'] = plt.scatter([], [], s=50, c='yellow', edgecolors='bl
 annotation_plot['bad'] = plt.scatter([], [], s=50, c='red', edgecolors='black')
 annotation_plot['false_positive'] = plt.scatter([], [], s=50, c='blue', edgecolors='black')
 
-create_labels(fig)
+create_labels(ax)
 
 plt.show()
