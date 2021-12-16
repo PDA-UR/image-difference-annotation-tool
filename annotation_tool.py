@@ -15,11 +15,11 @@ KEY_ANNOTATION_STRIKETHROUGH = 'f'
 
 labels = {}
 labels[KEY_SWAP] = 'swap images'
-labels[KEY_QUALITY_GOOD] = 'good quality annotation'
-labels[KEY_QUALITY_MEDIUM] = 'medium quality annotation'
-labels[KEY_QUALITY_BAD] = 'bad quality annotation'
-labels[KEY_FALSE_POSITIV] = 'false positive'
-labels[KEY_ANNOTATION_HIGHTLIGTH] = 'highlight'
+labels[KEY_QUALITY_GOOD] = 'good quality'
+labels[KEY_QUALITY_MEDIUM] = 'medium quality'
+labels[KEY_QUALITY_BAD] = 'bad quality'
+labels[KEY_FALSE_POSITIVE] = 'false positive'
+labels[KEY_ANNOTATION_HIGHLIGHT] = 'highlight'
 labels[KEY_ANNOTATION_NOTE] = 'note'
 labels[KEY_ANNOTATION_UNDERLINE] = 'underline'
 labels[KEY_ANNOTATION_STRIKETHROUGH] = 'strikethrough'
@@ -45,6 +45,22 @@ coords['false_positive'] = []
 
 current_mode = 'good'
 current_type = 'highlight'
+
+def create_labels(fig):
+    x_pos = -2000
+    x_offset_key = x_pos
+    x_offset_text = x_pos + 150
+    y_pos = fig.get_size_inches() * fig.dpi
+    for key, text in labels.items():
+        print(key, text)
+        color = 'black'
+        # TODO update text on keypress to make this work
+        #if(current_mode in text or current_type in text):
+        #    color = 'blue'
+
+        plt.text(x_offset_key, y_pos[1], f'{key}', fontsize=18, c=color)
+        plt.text(x_offset_text, y_pos[1], f'{text}', fontsize=18, c=color)
+        y_pos += 150
 
 def update_plot():
     global annotation_plot
@@ -95,5 +111,7 @@ annotation_plot['good'] = plt.scatter([], [], s=50, c='lime', edgecolors='black'
 annotation_plot['medium'] = plt.scatter([], [], s=50, c='yellow', edgecolors='black')
 annotation_plot['bad'] = plt.scatter([], [], s=50, c='red', edgecolors='black')
 annotation_plot['false_positive'] = plt.scatter([], [], s=50, c='blue', edgecolors='black')
+
+create_labels(fig)
 
 plt.show()
