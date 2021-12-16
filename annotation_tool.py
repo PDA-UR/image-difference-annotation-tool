@@ -2,6 +2,8 @@ import sys
 from matplotlib.backend_bases import MouseButton
 from matplotlib import pyplot as plt
 import numpy as np
+import pandas as pd
+import seaborn as sns
 
 KEY_SWAP = 'x'
 KEY_QUALITY_GOOD = '1'
@@ -34,9 +36,6 @@ path_img_2 = sys.argv[2]
 img_1 = plt.imread(path_img_1)
 img_2 = plt.imread(path_img_2)
 
-annotation_coordinates_1 = []
-annotation_coordinates_2 = []
-
 coords = {}
 coords['good'] = []
 coords['medium'] = []
@@ -45,6 +44,12 @@ coords['false_positive'] = []
 
 current_mode = 'good'
 current_type = 'highlight'
+
+annotations = pd.DataFrame(columns=['x', 'y', 'type', 'quality'])
+
+def create_annotation(x, y, t, q):
+    global annotations
+    annotations = annotations.append({'x' : x, 'y' : y, 'type' : t, 'quality' : q}, ignore_index=True)
 
 def create_description(ax):
     x_size = ax.get_xlim()[1]
@@ -75,17 +80,16 @@ def create_description(ax):
 
     return mode_label, type_label
 
-
-
 def update_plot():
-    global annotation_plot
+    global annotation_plot, annotations
     for mode in coords.keys():
-        if(len(coords[mode]) < 1):
+        df = annotations[annotations['quality'] == mode]
+        x_values = list(df['x'])
+        y_values = list(df['y'])
+
+        if(len(x_values) < 1):
             continue
-        tmp = np.array(coords[mode])
-        tmp = tmp.transpose()
-        tmp = tmp.tolist()
-        annotation_plot[mode].set_offsets(np.c_[tmp[0], tmp[1]])
+        annotation_plot[mode].set_offsets(np.c_[x_values, y_values])
 
 def on_press(event):
     global current_mode
@@ -123,7 +127,8 @@ def on_click(event):
         return
     if event.button is MouseButton.LEFT:
         print(event.xdata, event.ydata)
-        coords[current_mode].append([event.xdata, event.ydata])
+        #coords[current_mode].append([event.xdata, event.ydata])
+        create_annotation(event.xdata, event.ydata, current_type, current_mode)
         update_plot()
         fig.canvas.draw()
 
@@ -144,6 +149,8 @@ annotation_plot['good'] = plt.scatter([], [], s=50, c='lime', edgecolors='black'
 annotation_plot['medium'] = plt.scatter([], [], s=50, c='yellow', edgecolors='black')
 annotation_plot['bad'] = plt.scatter([], [], s=50, c='red', edgecolors='black')
 annotation_plot['false_positive'] = plt.scatter([], [], s=50, c='blue', edgecolors='black')
+
+#new_plot = sns.scatterplot(data=annotations, x='x', y='y', hue='quality', axes=ax)
 
 mode_label, type_label = create_description(ax)
 
