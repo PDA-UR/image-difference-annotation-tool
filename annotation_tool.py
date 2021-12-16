@@ -13,16 +13,16 @@ KEY_ANNOTATION_NOTE = 's'
 KEY_ANNOTATION_UNDERLINE = 'd'
 KEY_ANNOTATION_STRIKETHROUGH = 'f'
 
-labels = {}
-labels[KEY_SWAP] = 'swap images'
-labels[KEY_QUALITY_GOOD] = 'good quality'
-labels[KEY_QUALITY_MEDIUM] = 'medium quality'
-labels[KEY_QUALITY_BAD] = 'bad quality'
-labels[KEY_FALSE_POSITIVE] = 'false positive'
-labels[KEY_ANNOTATION_HIGHLIGHT] = 'highlight'
-labels[KEY_ANNOTATION_NOTE] = 'note'
-labels[KEY_ANNOTATION_UNDERLINE] = 'underline'
-labels[KEY_ANNOTATION_STRIKETHROUGH] = 'strikethrough'
+ui_text = {}
+ui_text[KEY_SWAP] = 'swap images'
+ui_text[KEY_QUALITY_GOOD] = 'good quality'
+ui_text[KEY_QUALITY_MEDIUM] = 'medium quality'
+ui_text[KEY_QUALITY_BAD] = 'bad quality'
+ui_text[KEY_FALSE_POSITIVE] = 'false positive'
+ui_text[KEY_ANNOTATION_HIGHLIGHT] = 'highlight'
+ui_text[KEY_ANNOTATION_NOTE] = 'note'
+ui_text[KEY_ANNOTATION_UNDERLINE] = 'underline'
+ui_text[KEY_ANNOTATION_STRIKETHROUGH] = 'strikethrough'
 
 if(len(sys.argv) < 3):
     print('too few arguments')
@@ -46,20 +46,19 @@ coords['false_positive'] = []
 current_mode = 'good'
 current_type = 'highlight'
 
-def create_labels(ax):
+def create_description(ax):
     x_size = ax.get_xlim()[1]
     y_size = ax.get_ylim()[0]
+
     x_pos = -0.8 * x_size
     x_offset_key = x_pos
     x_offset_text = x_pos + (x_size / 15)
     x_offset_indicator = x_pos + (x_size * 0.4)
+
     y_pos = 0.1 * y_size
 
-    for key, text in labels.items():
+    for key, text in ui_text.items():
         color = 'black'
-        # TODO update text on keypress to make this work
-        #if(current_mode in text or current_type in text):
-        #    color = 'blue'
 
         plt.text(x_offset_key, y_pos, f'{key}', fontsize=18, c=color)
         plt.text(x_offset_text, y_pos, f'{text}', fontsize=18, c=color)
@@ -69,6 +68,7 @@ def create_labels(ax):
     y_pos += (y_size / 20)
     plt.text(x_offset_key, y_pos, 'current quality:', fontsize=18, c=color)
     mode_label = plt.text(x_offset_indicator, y_pos, f'{current_mode}', fontsize=18, c=color)
+
     y_pos += (y_size / 20)
     plt.text(x_offset_key, y_pos, 'current mode:', fontsize=18, c=color)
     type_label = plt.text(x_offset_indicator, y_pos, f'{current_type}', fontsize=18, c=color)
@@ -145,6 +145,6 @@ annotation_plot['medium'] = plt.scatter([], [], s=50, c='yellow', edgecolors='bl
 annotation_plot['bad'] = plt.scatter([], [], s=50, c='red', edgecolors='black')
 annotation_plot['false_positive'] = plt.scatter([], [], s=50, c='blue', edgecolors='black')
 
-mode_label, type_label = create_labels(ax)
+mode_label, type_label = create_description(ax)
 
 plt.show()
