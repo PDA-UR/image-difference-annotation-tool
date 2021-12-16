@@ -13,6 +13,17 @@ KEY_ANNOTATION_NOTE = 's'
 KEY_ANNOTATION_UNDERLINE = 'd'
 KEY_ANNOTATION_STRIKETHROUGH = 'f'
 
+labels = {}
+labels[KEY_SWAP] = 'swap images'
+labels[KEY_QUALITY_GOOD] = 'good quality annotation'
+labels[KEY_QUALITY_MEDIUM] = 'medium quality annotation'
+labels[KEY_QUALITY_BAD] = 'bad quality annotation'
+labels[KEY_FALSE_POSITIV] = 'false positive'
+labels[KEY_ANNOTATION_HIGHTLIGTH] = 'highlight'
+labels[KEY_ANNOTATION_NOTE] = 'note'
+labels[KEY_ANNOTATION_UNDERLINE] = 'underline'
+labels[KEY_ANNOTATION_STRIKETHROUGH] = 'strikethrough'
+
 if(len(sys.argv) < 3):
     print('too few arguments')
     print('usage: python3 annotation_tool.py image1 image2')
@@ -33,6 +44,7 @@ coords['bad'] = []
 coords['false_positive'] = []
 
 current_mode = 'good'
+current_type = 'highlight'
 
 def update_plot():
     global annotation_plot
