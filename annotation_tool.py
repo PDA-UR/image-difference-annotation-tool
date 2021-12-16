@@ -52,6 +52,7 @@ def create_labels(ax):
     x_pos = -0.8 * x_size
     x_offset_key = x_pos
     x_offset_text = x_pos + (x_size / 15)
+    x_offset_indicator = x_pos + (x_size * 0.4)
     y_pos = 0.1 * y_size
 
     for key, text in labels.items():
@@ -62,7 +63,19 @@ def create_labels(ax):
 
         plt.text(x_offset_key, y_pos, f'{key}', fontsize=18, c=color)
         plt.text(x_offset_text, y_pos, f'{text}', fontsize=18, c=color)
+
         y_pos += (y_size / 20)
+
+    y_pos += (y_size / 20)
+    plt.text(x_offset_key, y_pos, 'current quality:', fontsize=18, c=color)
+    mode_label = plt.text(x_offset_indicator, y_pos, f'{current_mode}', fontsize=18, c=color)
+    y_pos += (y_size / 20)
+    plt.text(x_offset_key, y_pos, 'current mode:', fontsize=18, c=color)
+    type_label = plt.text(x_offset_indicator, y_pos, f'{current_type}', fontsize=18, c=color)
+
+    return mode_label, type_label
+
+
 
 def update_plot():
     global annotation_plot
@@ -76,10 +89,13 @@ def update_plot():
 
 def on_press(event):
     global current_mode
+    global current_type
+    global mode_label
+    global type_label
+
     if event.key == KEY_SWAP:
         img_handle_1.set_visible(not img_handle_1.get_visible())
         img_handle_2.set_visible(not img_handle_2.get_visible())
-        fig.canvas.draw()
     elif event.key == KEY_QUALITY_GOOD:
         current_mode = 'good'
     elif event.key == KEY_QUALITY_MEDIUM:
@@ -88,6 +104,18 @@ def on_press(event):
         current_mode = 'bad'
     elif event.key == KEY_FALSE_POSITIVE:
         current_mode = 'false_positive'
+    elif event.key == KEY_ANNOTATION_HIGHLIGHT:
+        current_type = 'highlight'
+    elif event.key == KEY_ANNOTATION_NOTE:
+        current_type = 'note'
+    elif event.key == KEY_ANNOTATION_UNDERLINE:
+        current_type = 'underline'
+    elif event.key == KEY_ANNOTATION_STRIKETHROUGH:
+        current_type = 'strikethrough'
+
+    mode_label.set_text(current_mode)
+    type_label.set_text(current_type)
+    fig.canvas.draw()
 
 def on_click(event):
     if fig.canvas.cursor().shape() != 0:
@@ -117,6 +145,6 @@ annotation_plot['medium'] = plt.scatter([], [], s=50, c='yellow', edgecolors='bl
 annotation_plot['bad'] = plt.scatter([], [], s=50, c='red', edgecolors='black')
 annotation_plot['false_positive'] = plt.scatter([], [], s=50, c='blue', edgecolors='black')
 
-create_labels(ax)
+mode_label, type_label = create_labels(ax)
 
 plt.show()
