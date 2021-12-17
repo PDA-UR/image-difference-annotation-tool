@@ -3,8 +3,8 @@ from matplotlib.backend_bases import MouseButton
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 
+# key bindings
 KEY_SWAP = 'x'
 KEY_UNDO = 'u'
 KEY_REDO = 'r'
@@ -17,6 +17,7 @@ KEY_ANNOTATION_NOTE = 's'
 KEY_ANNOTATION_UNDERLINE = 'd'
 KEY_ANNOTATION_STRIKETHROUGH = 'f'
 
+# UI labels
 ui_text = {}
 ui_text[KEY_SWAP] = 'swap images'
 ui_text[KEY_UNDO] = 'undo last annotation'
@@ -40,18 +41,14 @@ path_img_2 = sys.argv[2]
 img_1 = plt.imread(path_img_1)
 img_2 = plt.imread(path_img_2)
 
-coords = {}
-coords['good'] = []
-coords['medium'] = []
-coords['bad'] = []
-coords['false_positive'] = []
+qualities = ['good', 'medium', 'bad', 'false_positive']
+types = ['highlight', 'note', 'underline', 'strikethrough']
 
-current_mode = 'good'
-current_type = 'highlight'
+current_quality = qualities[0]
+current_type = types[0]
 
 annotations = pd.DataFrame(columns=['x', 'y', 'type', 'quality'])
 annotations_undo_stack = pd.DataFrame(columns=['x', 'y', 'type', 'quality'])
-
 
 def create_annotation(x, y, t, q):
     global annotations
@@ -78,24 +75,24 @@ def create_description(ax):
 
     y_pos += (y_size / 20)
     plt.text(x_offset_key, y_pos, 'current quality:', fontsize=18, c=color)
-    mode_label = plt.text(x_offset_indicator, y_pos, f'{current_mode}', fontsize=18, c=color)
+    quality_label = plt.text(x_offset_indicator, y_pos, f'{current_quality}', fontsize=18, c=color)
 
     y_pos += (y_size / 20)
-    plt.text(x_offset_key, y_pos, 'current mode:', fontsize=18, c=color)
+    plt.text(x_offset_key, y_pos, 'current quality:', fontsize=18, c=color)
     type_label = plt.text(x_offset_indicator, y_pos, f'{current_type}', fontsize=18, c=color)
 
-    return mode_label, type_label
+    return quality_label, type_label
 
 def update_plot():
-    global annotation_plot, annotations
-    for mode in coords.keys():
-        df = annotations[annotations['quality'] == mode]
+    global annotation_plot, annotations, qualities
+    for quality in qualities:
+        df = annotations[annotations['quality'] == quality]
         x_values = list(df['x'])
         y_values = list(df['y'])
 
         if(len(x_values) < 1):
             continue
-        annotation_plot[mode].set_offsets(np.c_[x_values, y_values])
+        annotation_plot[quality].set_offsets(np.c_[x_values, y_values])
 
 def undo():
     global annotations, annotations_undo_stack
@@ -110,9 +107,9 @@ def redo():
     update_plot()
 
 def on_press(event):
-    global current_mode
+    global current_quality
     global current_type
-    global mode_label
+    global quality_label
     global type_label
 
     if event.key == KEY_SWAP:
@@ -123,13 +120,13 @@ def on_press(event):
     elif event.key == KEY_REDO:
         redo()
     elif event.key == KEY_QUALITY_GOOD:
-        current_mode = 'good'
+        current_quality = 'good'
     elif event.key == KEY_QUALITY_MEDIUM:
-        current_mode = 'medium'
+        current_quality = 'medium'
     elif event.key == KEY_QUALITY_BAD:
-        current_mode = 'bad'
+        current_quality = 'bad'
     elif event.key == KEY_FALSE_POSITIVE:
-        current_mode = 'false_positive'
+        current_quality = 'false_positive'
     elif event.key == KEY_ANNOTATION_HIGHLIGHT:
         current_type = 'highlight'
     elif event.key == KEY_ANNOTATION_NOTE:
@@ -139,22 +136,21 @@ def on_press(event):
     elif event.key == KEY_ANNOTATION_STRIKETHROUGH:
         current_type = 'strikethrough'
 
-    mode_label.set_text(current_mode)
+    quality_label.set_text(current_quality)
     type_label.set_text(current_type)
     fig.canvas.draw()
 
 def on_click(event):
     if fig.canvas.cursor().shape() != 0:
-        # we are in zoom or pan mode as the cursor has no default shape
+        # we are in zoom or pan quality as the cursor has no default shape
         return
     if event.button is MouseButton.LEFT:
         print(event.xdata, event.ydata)
-        #coords[current_mode].append([event.xdata, event.ydata])
 
         # clear undo stack when new annotation is made
         annotations_undo_stack.drop(annotations_undo_stack.index, inplace=True)
 
-        create_annotation(event.xdata, event.ydata, current_type, current_mode)
+        create_annotation(event.xdata, event.ydata, current_type, current_quality)
         update_plot()
         fig.canvas.draw()
 
@@ -176,8 +172,6 @@ annotation_plot['medium'] = plt.scatter([], [], s=50, c='yellow', edgecolors='bl
 annotation_plot['bad'] = plt.scatter([], [], s=50, c='red', edgecolors='black')
 annotation_plot['false_positive'] = plt.scatter([], [], s=50, c='blue', edgecolors='black')
 
-#new_plot = sns.scatterplot(data=annotations, x='x', y='y', hue='quality', axes=ax)
-
-mode_label, type_label = create_description(ax)
+quality_label, type_label = create_description(ax)
 
 plt.show()
