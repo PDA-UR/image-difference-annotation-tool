@@ -9,6 +9,7 @@ KEY_SWAP = 'x'
 KEY_UNDO = 'u'
 KEY_REDO = 'r'
 #KEY_LABELS = 'l'
+KEY_QUIT = 'q'
 KEY_QUALITY_GOOD = '1'
 KEY_QUALITY_MEDIUM = '2'
 KEY_QUALITY_BAD = '3'
@@ -56,6 +57,9 @@ annotations_undo_stack = pd.DataFrame(columns=['x', 'y', 'type', 'quality'])
 def create_annotation(x, y, t, q):
     global annotations
     annotations = annotations.append({'x' : x, 'y' : y, 'type' : t, 'quality' : q}, ignore_index=True)
+
+def save_annotations():
+    annotations.to_csv(sys.stdout, index_label='id')
 
 def create_description(ax):
     x_size = ax.get_xlim()[1]
@@ -137,6 +141,9 @@ def on_press(event):
     #elif event.key == KEY_LABELS:
     #    show_labels = not show_labels
     #    update_plot()
+    elif event.key == KEY_QUIT:
+        save_annotations()
+        sys.exit(0)
     elif event.key == KEY_QUALITY_GOOD:
         current_quality = 'good'
     elif event.key == KEY_QUALITY_MEDIUM:
@@ -178,6 +185,7 @@ plt.connect('button_press_event', on_click)
 plt.rcParams['keymap.save'].remove('s')
 plt.rcParams['keymap.fullscreen'].remove('f')
 plt.rcParams['keymap.yscale'].remove('l')
+plt.rcParams['keymap.quit'].remove('q')
 
 img_handle_1 = plt.imshow(img_1)
 img_handle_2 = plt.imshow(img_2)
