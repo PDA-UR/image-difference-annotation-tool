@@ -8,6 +8,7 @@ import pandas as pd
 KEY_SWAP = 'x'
 KEY_UNDO = 'u'
 KEY_REDO = 'r'
+#KEY_LABELS = 'l'
 KEY_QUALITY_GOOD = '1'
 KEY_QUALITY_MEDIUM = '2'
 KEY_QUALITY_BAD = '3'
@@ -22,6 +23,7 @@ ui_text = {}
 ui_text[KEY_SWAP] = 'swap images'
 ui_text[KEY_UNDO] = 'undo last annotation'
 ui_text[KEY_REDO] = 'redo last undo'
+#ui_text[KEY_LABELS] = 'show labels'
 ui_text[KEY_QUALITY_GOOD] = 'good quality'
 ui_text[KEY_QUALITY_MEDIUM] = 'medium quality'
 ui_text[KEY_QUALITY_BAD] = 'bad quality'
@@ -46,6 +48,7 @@ types = ['highlight', 'note', 'underline', 'strikethrough']
 
 current_quality = qualities[0]
 current_type = types[0]
+#show_labels = True
 
 annotations = pd.DataFrame(columns=['x', 'y', 'type', 'quality'])
 annotations_undo_stack = pd.DataFrame(columns=['x', 'y', 'type', 'quality'])
@@ -84,7 +87,13 @@ def create_description(ax):
     return quality_label, type_label
 
 def update_plot():
-    global annotation_plot, annotations, qualities
+    global annotation_plot, annotations, qualities #, show_labels
+
+    #x_size = ax.get_xlim()[1]
+    #y_size = ax.get_ylim()[0]
+    #x_offset_label = x_size * 0.02
+    #y_offset_label = y_size * 0.02
+
     for quality in qualities:
         df = annotations[annotations['quality'] == quality]
         x_values = list(df['x'])
@@ -93,6 +102,11 @@ def update_plot():
         if(len(x_values) < 1):
             continue
         annotation_plot[quality].set_offsets(np.c_[x_values, y_values])
+
+    # annotations disabled for now, as they get redrawn over and over again
+    #if(show_labels):
+    #    for index, row in annotations.iterrows():
+    #        ax.annotate(row['type'], xy=(row['x'], row['y']), xytext=(row['x'] + x_offset_label, row['y'] + y_offset_label))
 
 def undo():
     global annotations, annotations_undo_stack
@@ -111,6 +125,7 @@ def on_press(event):
     global current_type
     global quality_label
     global type_label
+    global show_labels
 
     if event.key == KEY_SWAP:
         img_handle_1.set_visible(not img_handle_1.get_visible())
@@ -119,6 +134,9 @@ def on_press(event):
         undo()
     elif event.key == KEY_REDO:
         redo()
+    #elif event.key == KEY_LABELS:
+    #    show_labels = not show_labels
+    #    update_plot()
     elif event.key == KEY_QUALITY_GOOD:
         current_quality = 'good'
     elif event.key == KEY_QUALITY_MEDIUM:
@@ -145,8 +163,6 @@ def on_click(event):
         # we are in zoom or pan quality as the cursor has no default shape
         return
     if event.button is MouseButton.LEFT:
-        print(event.xdata, event.ydata)
-
         # clear undo stack when new annotation is made
         annotations_undo_stack.drop(annotations_undo_stack.index, inplace=True)
 
@@ -161,6 +177,7 @@ plt.connect('button_press_event', on_click)
 
 plt.rcParams['keymap.save'].remove('s')
 plt.rcParams['keymap.fullscreen'].remove('f')
+plt.rcParams['keymap.yscale'].remove('l')
 
 img_handle_1 = plt.imshow(img_1)
 img_handle_2 = plt.imshow(img_2)
