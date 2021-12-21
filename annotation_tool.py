@@ -1,6 +1,7 @@
 import sys
 from matplotlib.backend_bases import MouseButton
 from matplotlib import pyplot as plt
+from matplotlib import patches as patches
 import numpy as np
 import pandas as pd
 
@@ -81,12 +82,14 @@ def create_description(ax):
         y_pos += (y_size / 20)
 
     y_pos += (y_size / 20)
+
     plt.text(x_offset_key, y_pos, 'current quality:', fontsize=18, c=color)
-    quality_label = plt.text(x_offset_indicator, y_pos, f'{current_quality}', fontsize=18, c=color)
+    quality_label = ax.text(x_offset_indicator, y_pos, f'{current_quality}', fontsize=18, c=color, bbox=dict(facecolor='white', linewidth=0, alpha=1))
 
     y_pos += (y_size / 20)
     plt.text(x_offset_key, y_pos, 'current quality:', fontsize=18, c=color)
-    type_label = plt.text(x_offset_indicator, y_pos, f'{current_type}', fontsize=18, c=color)
+    type_label = ax.text(x_offset_indicator, y_pos, f'{current_type}', fontsize=18, c=color, bbox=dict(facecolor='white', linewidth=0, alpha=1))
+
 
     return quality_label, type_label
 
@@ -123,6 +126,7 @@ def undo():
     annotations_undo_stack = annotations_undo_stack.append(annotations[-1:])
     annotations = annotations[:-1]
     update_plot()
+    fig.canvas.draw_idle()
 
 def redo():
     global annotations, annotations_undo_stack
@@ -140,6 +144,7 @@ def on_press(event):
     if event.key == KEY_SWAP:
         img_handle_1.set_visible(not img_handle_1.get_visible())
         img_handle_2.set_visible(not img_handle_2.get_visible())
+        fig.canvas.draw()
     elif event.key == KEY_UNDO:
         undo()
     elif event.key == KEY_REDO:
@@ -167,9 +172,15 @@ def on_press(event):
     elif event.key == KEY_ANNOTATION_STRIKETHROUGH:
         current_type = 'strikethrough'
 
-    quality_label.set_text(current_quality)
-    type_label.set_text(current_type)
-    fig.canvas.draw()
+    # wow that's hacky!
+    # add spaces so bounding boxes cover the old text
+    quality_label.set_text(f'{current_quality}        ')
+    type_label.set_text(f'{current_type}        ')
+
+    ax.draw_artist(quality_label)
+    ax.draw_artist(type_label)
+    fig.canvas.update()
+    fig.canvas.flush_events()
 
 def on_click(event):
     if fig.canvas.cursor().shape() != 0:
