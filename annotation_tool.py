@@ -11,6 +11,7 @@ KEY_UNDO = 'u'
 KEY_REDO = 'r'
 #KEY_LABELS = 'l'
 KEY_QUIT = 'q'
+KEY_HOME = 'h'
 KEY_QUALITY_GOOD = '1'
 KEY_QUALITY_MEDIUM = '2'
 KEY_QUALITY_BAD = '3'
@@ -26,6 +27,7 @@ ui_text[KEY_SWAP] = 'swap images'
 ui_text[KEY_UNDO] = 'undo last annotation'
 ui_text[KEY_REDO] = 'redo last undo'
 #ui_text[KEY_LABELS] = 'show labels'
+ui_text[KEY_HOME] = 'reset zoom'
 ui_text[KEY_QUALITY_GOOD] = 'good quality'
 ui_text[KEY_QUALITY_MEDIUM] = 'medium quality'
 ui_text[KEY_QUALITY_BAD] = 'bad quality'
@@ -62,7 +64,7 @@ def create_annotation(x, y, t, q):
 def save_annotations():
     annotations.to_csv(sys.stdout, index_label='id')
 
-def create_description(ax):
+def create_description_old(ax):
     x_size = ax.get_xlim()[1]
     y_size = ax.get_ylim()[0]
 
@@ -93,6 +95,37 @@ def create_description(ax):
 
     return quality_label, type_label
 
+def create_description(ax):
+    x_size = 1
+    y_size = 1
+
+    x_pos = 0.1
+    x_offset_key = x_pos
+    x_offset_text = x_pos + (x_size / 15)
+    x_offset_indicator = x_pos + (x_size * 0.4)
+
+    y_pos = 0.1 * y_size
+
+    for key, text in ui_text.items():
+        color = 'black'
+
+        ax.text(x_offset_key, y_pos, f'{key}', fontsize=18, c=color)
+        ax.text(x_offset_text, y_pos, f'{text}', fontsize=18, c=color)
+
+        y_pos += (y_size / 20)
+
+    y_pos += (y_size / 20)
+
+    ax.text(x_offset_key, y_pos, 'quality:', fontsize=18, c=color)
+    quality_label = ax.text(x_offset_indicator, y_pos, f'{current_quality}', fontsize=18, c=color, bbox=dict(facecolor='white', linewidth=0, alpha=1))
+
+    y_pos += (y_size / 20)
+    ax.text(x_offset_key, y_pos, 'type:', fontsize=18, c=color)
+    type_label = ax.text(x_offset_indicator, y_pos, f'{current_type}', fontsize=18, c=color, bbox=dict(facecolor='white', linewidth=0, alpha=1))
+
+
+    return quality_label, type_label
+
 def update_plot():
     global annotation_plot, annotations, qualities #, show_labels
 
@@ -109,7 +142,7 @@ def update_plot():
         if(len(x_values) < 1):
             continue
         annotation_plot[quality].set_offsets(np.c_[x_values, y_values])
-        ax.draw_artist(annotation_plot[quality])
+        ax_image.draw_artist(annotation_plot[quality])
 
     # ax.draw_artist() and fig.canvas.update() is WAY faster than fig.canvas.draw()
     # source: https://bastibe.de/2013-05-30-speeding-up-matplotlib.html
@@ -144,7 +177,9 @@ def on_press(event):
     if event.key == KEY_SWAP:
         img_handle_1.set_visible(not img_handle_1.get_visible())
         img_handle_2.set_visible(not img_handle_2.get_visible())
-        fig.canvas.draw()
+        ax_image.draw_artist(img_handle_1)
+        ax_image.draw_artist(img_handle_2)
+        #fig.canvas.draw()
     elif event.key == KEY_UNDO:
         undo()
     elif event.key == KEY_REDO:
@@ -177,8 +212,8 @@ def on_press(event):
     quality_label.set_text(f'{current_quality}        ')
     type_label.set_text(f'{current_type}        ')
 
-    ax.draw_artist(quality_label)
-    ax.draw_artist(type_label)
+    ax_description.draw_artist(quality_label)
+    ax_description.draw_artist(type_label)
     fig.canvas.update()
     fig.canvas.flush_events()
 
@@ -194,7 +229,11 @@ def on_click(event):
         update_plot()
         #fig.canvas.draw()
 
-fig, ax = plt.subplots()
+fig, axes = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 2.5]})
+ax = axes[1]
+ax_description = axes[0]
+ax_description.invert_yaxis()
+ax_image = axes[1]
 
 fig.canvas.mpl_connect('key_press_event', on_press)
 plt.connect('button_press_event', on_click)
@@ -203,17 +242,18 @@ plt.rcParams['keymap.save'].remove('s')
 plt.rcParams['keymap.fullscreen'].remove('f')
 plt.rcParams['keymap.yscale'].remove('l')
 plt.rcParams['keymap.quit'].remove('q')
+plt.rcParams['keymap.home'].remove('r')
 
-img_handle_1 = plt.imshow(img_1)
-img_handle_2 = plt.imshow(img_2)
+img_handle_1 = axes[1].imshow(img_1)
+img_handle_2 = axes[1].imshow(img_2)
 img_handle_2.set_visible(False)
 
 annotation_plot = {}
-annotation_plot['good'] = plt.scatter([], [], s=50, c='lime', edgecolors='black')
-annotation_plot['medium'] = plt.scatter([], [], s=50, c='yellow', edgecolors='black')
-annotation_plot['bad'] = plt.scatter([], [], s=50, c='red', edgecolors='black')
-annotation_plot['false_positive'] = plt.scatter([], [], s=50, c='blue', edgecolors='black')
+annotation_plot['good'] = ax_image.scatter([], [], s=50, c='lime', edgecolors='black')
+annotation_plot['medium'] = ax_image.scatter([], [], s=50, c='yellow', edgecolors='black')
+annotation_plot['bad'] = ax_image.scatter([], [], s=50, c='red', edgecolors='black')
+annotation_plot['false_positive'] = ax_image.scatter([], [], s=50, c='blue', edgecolors='black')
 
-quality_label, type_label = create_description(ax)
+quality_label, type_label = create_description(ax_description)
 
 plt.show()
