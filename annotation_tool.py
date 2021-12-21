@@ -115,13 +115,11 @@ def create_description(ax):
         y_pos += (y_size / 20)
 
     y_pos += (y_size / 20)
-
-    ax.text(x_offset_key, y_pos, 'quality:', fontsize=18, c=color)
-    quality_label = ax.text(x_offset_indicator, y_pos, f'{current_quality}', fontsize=18, c=color, bbox=dict(facecolor='white', linewidth=0, alpha=1))
-
+    ax.text(x_offset_key, y_pos, 'current selection:', fontsize=18, c=color)
     y_pos += (y_size / 20)
-    ax.text(x_offset_key, y_pos, 'type:', fontsize=18, c=color)
-    type_label = ax.text(x_offset_indicator, y_pos, f'{current_type}', fontsize=18, c=color, bbox=dict(facecolor='white', linewidth=0, alpha=1))
+    quality_label = ax.text(x_offset_key, y_pos, f'{current_quality} quality', fontsize=18, c=color, bbox=dict(facecolor='white', linewidth=0, alpha=1))
+    y_pos += (y_size / 20)
+    type_label = ax.text(x_offset_key, y_pos, f'{current_type}', fontsize=18, c=color, bbox=dict(facecolor='white', linewidth=0, alpha=1))
 
 
     return quality_label, type_label
@@ -173,13 +171,15 @@ def on_press(event):
     global quality_label
     global type_label
     global show_labels
+    global ax_image
 
     if event.key == KEY_SWAP:
         img_handle_1.set_visible(not img_handle_1.get_visible())
         img_handle_2.set_visible(not img_handle_2.get_visible())
-        ax_image.draw_artist(img_handle_1)
-        ax_image.draw_artist(img_handle_2)
-        #fig.canvas.draw()
+        #ax_image.draw_artist(img_handle_1)
+        #ax_image.draw_artist(img_handle_2)
+        #fig.canvas.blit(ax_image.bbox)
+        fig.canvas.draw()
     elif event.key == KEY_UNDO:
         undo()
     elif event.key == KEY_REDO:
@@ -209,7 +209,7 @@ def on_press(event):
 
     # wow that's hacky!
     # add spaces so bounding boxes cover the old text
-    quality_label.set_text(f'{current_quality}        ')
+    quality_label.set_text(f'{current_quality} quality       ')
     type_label.set_text(f'{current_type}        ')
 
     ax_description.draw_artist(quality_label)
@@ -230,10 +230,13 @@ def on_click(event):
         #fig.canvas.draw()
 
 fig, axes = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 2.5]})
-ax = axes[1]
+
 ax_description = axes[0]
 ax_description.invert_yaxis()
+ax_description.axis('off')
+
 ax_image = axes[1]
+ax_image.axis('off')
 
 fig.canvas.mpl_connect('key_press_event', on_press)
 plt.connect('button_press_event', on_click)
