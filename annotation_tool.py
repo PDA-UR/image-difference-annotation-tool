@@ -106,6 +106,12 @@ def update_plot():
         if(len(x_values) < 1):
             continue
         annotation_plot[quality].set_offsets(np.c_[x_values, y_values])
+        ax.draw_artist(annotation_plot[quality])
+
+    # ax.draw_artist() and fig.canvas.update() is WAY faster than fig.canvas.draw()
+    # source: https://bastibe.de/2013-05-30-speeding-up-matplotlib.html
+    fig.canvas.update()
+    fig.canvas.flush_events()
 
     # annotations disabled for now, as they get redrawn over and over again
     #if(show_labels):
@@ -175,7 +181,7 @@ def on_click(event):
 
         create_annotation(event.xdata, event.ydata, current_type, current_quality)
         update_plot()
-        fig.canvas.draw()
+        #fig.canvas.draw()
 
 fig, ax = plt.subplots()
 
