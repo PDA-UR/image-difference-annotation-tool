@@ -47,6 +47,12 @@ path_img_2 = sys.argv[2]
 img_1 = plt.imread(path_img_1)
 img_2 = plt.imread(path_img_2)
 
+if(len(sys.argv) > 3):
+    scan_id = sys.argv[3]
+else:
+    scan_id = path_img_1.split('/')[-1].split('.')[0]
+    scan_id = scan_id.replace('_RGB', '').replace('_annotation', '')
+
 qualities = ['good', 'medium', 'bad', 'false_positive']
 types = ['highlight', 'note', 'underline', 'strikethrough']
 
@@ -62,6 +68,7 @@ def create_annotation(x, y, t, q):
     annotations = annotations.append({'x' : x, 'y' : y, 'type' : t, 'quality' : q}, ignore_index=True)
 
 def save_annotations():
+    annotations['scan_id'] = scan_id
     annotations.to_csv(sys.stdout, index_label='id')
 
 def create_description_old(ax):
