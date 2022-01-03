@@ -20,6 +20,7 @@ KEY_ANNOTATION_HIGHLIGHT = 'a'
 KEY_ANNOTATION_NOTE = 's'
 KEY_ANNOTATION_UNDERLINE = 'd'
 KEY_ANNOTATION_STRIKETHROUGH = 'f'
+KEY_ANNOTATION_OTHER = 'g'
 KEY_PEN_HIGHLIGHTER = 'c'
 KEY_PEN_SHARPIE = 'v'
 KEY_PEN_BALLHEAD = 'b'
@@ -39,6 +40,7 @@ ui_text[KEY_ANNOTATION_HIGHLIGHT] = 'highlight'
 ui_text[KEY_ANNOTATION_NOTE] = 'note'
 ui_text[KEY_ANNOTATION_UNDERLINE] = 'underline'
 ui_text[KEY_ANNOTATION_STRIKETHROUGH] = 'strikethrough'
+ui_text[KEY_ANNOTATION_OTHER] = 'other'
 
 if(len(sys.argv) < 3):
     print('too few arguments')
@@ -231,6 +233,8 @@ def on_press(event):
         current_type = 'underline'
     elif event.key == KEY_ANNOTATION_STRIKETHROUGH:
         current_type = 'strikethrough'
+    elif event.key == KEY_ANNOTATION_OTHER:
+        current_type = 'other'
     elif event.key == KEY_PEN_HIGHLIGHTER:
         if current_pen == 'highlighter':
             pen_color_index = (pen_color_index + 1) % len(pen_colors[current_pen])
@@ -293,6 +297,7 @@ plt.rcParams['keymap.quit'].remove('q')
 plt.rcParams['keymap.home'].remove('r')
 plt.rcParams['keymap.back'].remove('c')
 plt.rcParams['keymap.forward'].remove('v')
+plt.rcParams['keymap.grid'].remove('g')
 
 img_handle_1 = axes[1].imshow(img_1)
 img_handle_2 = axes[1].imshow(img_2)
