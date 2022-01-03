@@ -20,6 +20,9 @@ KEY_ANNOTATION_HIGHLIGHT = 'a'
 KEY_ANNOTATION_NOTE = 's'
 KEY_ANNOTATION_UNDERLINE = 'd'
 KEY_ANNOTATION_STRIKETHROUGH = 'f'
+KEY_PEN_HIGHLIGHTER = 'c'
+KEY_PEN_SHARPIE = 'v'
+KEY_PEN_BALLHEAD = 'b'
 
 # UI labels
 ui_text = {}
@@ -55,17 +58,24 @@ else:
 
 qualities = ['good', 'medium', 'bad', 'false_positive']
 types = ['highlight', 'note', 'underline', 'strikethrough']
+pens = ['highlighter', 'sharpie', 'ballhead']
+pen_colors = dict()
+pen_colors['highlighter'] = ['yellow', 'pink', 'green', 'blue']
+pen_colors['sharpie'] = ['black', 'blue', 'green', 'red']
+pen_colors['ballhead'] = ['black', 'blue']
 
 current_quality = qualities[0]
 current_type = types[0]
+current_pen = pens[0]
+pen_color_index = 0
 #show_labels = True
 
-annotations = pd.DataFrame(columns=['x', 'y', 'type', 'quality'])
-annotations_undo_stack = pd.DataFrame(columns=['x', 'y', 'type', 'quality'])
+annotations = pd.DataFrame(columns=['x', 'y', 'type', 'quality', 'pen'])
+annotations_undo_stack = pd.DataFrame(columns=['x', 'y', 'type', 'quality', 'pen'])
 
-def create_annotation(x, y, t, q):
+def create_annotation(x, y, t, q, p):
     global annotations
-    annotations = annotations.append({'x' : x, 'y' : y, 'type' : t, 'quality' : q}, ignore_index=True)
+    annotations = annotations.append({'x' : x, 'y' : y, 'type' : t, 'quality' : q, 'pen' : p}, ignore_index=True)
 
 def save_annotations():
     annotations['scan_id'] = scan_id
@@ -127,9 +137,13 @@ def create_description(ax):
     quality_label = ax.text(x_offset_key, y_pos, f'{current_quality} quality', fontsize=18, c=color, bbox=dict(facecolor='white', linewidth=0, alpha=1))
     y_pos += (y_size / 20)
     type_label = ax.text(x_offset_key, y_pos, f'{current_type}', fontsize=18, c=color, bbox=dict(facecolor='white', linewidth=0, alpha=1))
+    y_pos += (y_size / 20)
+    ax.text(x_offset_key, y_pos, 'current pen:', fontsize=18, c=color)
+    y_pos += (y_size / 20)
+    pen_label = ax.text(x_offset_key, y_pos, f'{current_pen}, {pen_colors[current_pen][pen_color_index]}', fontsize=18, c=color, bbox=dict(facecolor='white', linewidth=0, alpha=1))
 
 
-    return quality_label, type_label
+    return quality_label, type_label, pen_label
 
 def update_plot():
     global annotation_plot, annotations, qualities #, show_labels
@@ -175,8 +189,12 @@ def redo():
 def on_press(event):
     global current_quality
     global current_type
+    global current_pen
+    global pen_colors
+    global pen_color_index
     global quality_label
     global type_label
+    global pen_label
     global show_labels
     global ax_image
 
@@ -213,14 +231,34 @@ def on_press(event):
         current_type = 'underline'
     elif event.key == KEY_ANNOTATION_STRIKETHROUGH:
         current_type = 'strikethrough'
+    elif event.key == KEY_PEN_HIGHLIGHTER:
+        if current_pen == 'highlighter':
+            pen_color_index = (pen_color_index + 1) % len(pen_colors[current_pen])
+        else:
+            current_pen = 'highlighter'
+            pen_color_index = 0
+    elif event.key == KEY_PEN_SHARPIE:
+        if current_pen == 'sharpie':
+            pen_color_index = (pen_color_index + 1) % len(pen_colors[current_pen])
+        else:
+            current_pen = 'sharpie'
+            pen_color_index = 0
+    elif event.key == KEY_PEN_BALLHEAD:
+        if current_pen == 'ballhead':
+            pen_color_index = (pen_color_index + 1) % len(pen_colors[current_pen])
+        else:
+            current_pen = 'ballhead'
+            pen_color_index = 0
 
     # wow that's hacky!
     # add spaces so bounding boxes cover the old text
     quality_label.set_text(f'{current_quality} quality       ')
     type_label.set_text(f'{current_type}        ')
+    pen_label.set_text(f'{current_pen}, {pen_colors[current_pen][pen_color_index]}           ')
 
     ax_description.draw_artist(quality_label)
     ax_description.draw_artist(type_label)
+    ax_description.draw_artist(pen_label)
     fig.canvas.update()
     fig.canvas.flush_events()
 
@@ -232,7 +270,7 @@ def on_click(event):
         # clear undo stack when new annotation is made
         annotations_undo_stack.drop(annotations_undo_stack.index, inplace=True)
 
-        create_annotation(event.xdata, event.ydata, current_type, current_quality)
+        create_annotation(event.xdata, event.ydata, current_type, current_quality, f'{current_pen}_{pen_colors[current_pen][pen_color_index]}')
         update_plot()
         #fig.canvas.draw()
 
@@ -253,6 +291,8 @@ plt.rcParams['keymap.fullscreen'].remove('f')
 plt.rcParams['keymap.yscale'].remove('l')
 plt.rcParams['keymap.quit'].remove('q')
 plt.rcParams['keymap.home'].remove('r')
+plt.rcParams['keymap.back'].remove('c')
+plt.rcParams['keymap.forward'].remove('v')
 
 img_handle_1 = axes[1].imshow(img_1)
 img_handle_2 = axes[1].imshow(img_2)
@@ -264,6 +304,6 @@ annotation_plot['medium'] = ax_image.scatter([], [], s=50, c='yellow', edgecolor
 annotation_plot['bad'] = ax_image.scatter([], [], s=50, c='red', edgecolors='black')
 annotation_plot['false_positive'] = ax_image.scatter([], [], s=50, c='blue', edgecolors='black')
 
-quality_label, type_label = create_description(ax_description)
+quality_label, type_label, pen_label = create_description(ax_description)
 
 plt.show()
