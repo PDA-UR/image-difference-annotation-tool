@@ -124,6 +124,7 @@ def create_description(ax):
     x_offset_indicator = x_pos + (x_size * 0.4)
 
     y_pos = 0.1 * y_size
+    y_margin_constant = 25
 
     for key, text in ui_text.items():
         color = 'black'
@@ -131,17 +132,17 @@ def create_description(ax):
         ax.text(x_offset_key, y_pos, f'{key}', fontsize=18, c=color)
         ax.text(x_offset_text, y_pos, f'{text}', fontsize=18, c=color)
 
-        y_pos += (y_size / 20)
+        y_pos += (y_size / y_margin_constant)
 
-    y_pos += (y_size / 20)
+    y_pos += (y_size / y_margin_constant)
     ax.text(x_offset_key, y_pos, 'current selection:', fontsize=18, c=color)
-    y_pos += (y_size / 20)
+    y_pos += (y_size / y_margin_constant)
     quality_label = ax.text(x_offset_key, y_pos, f'{current_quality} quality', fontsize=18, c=color, bbox=dict(facecolor='white', linewidth=0, alpha=1))
-    y_pos += (y_size / 20)
+    y_pos += (y_size / y_margin_constant)
     type_label = ax.text(x_offset_key, y_pos, f'{current_type}', fontsize=18, c=color, bbox=dict(facecolor='white', linewidth=0, alpha=1))
-    y_pos += (y_size / 20)
+    y_pos += (y_size / y_margin_constant)
     ax.text(x_offset_key, y_pos, 'current pen:', fontsize=18, c=color)
-    y_pos += (y_size / 20)
+    y_pos += (y_size / y_margin_constant)
     pen_label = ax.text(x_offset_key, y_pos, f'{current_pen}, {pen_colors[current_pen][pen_color_index]}', fontsize=18, c=color, bbox=dict(facecolor='white', linewidth=0, alpha=1))
 
 
@@ -279,6 +280,7 @@ def on_click(event):
         #fig.canvas.draw()
 
 fig, axes = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 2.5]})
+plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
 
 ax_description = axes[0]
 ax_description.invert_yaxis()
