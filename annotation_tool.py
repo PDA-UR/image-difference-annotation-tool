@@ -11,7 +11,7 @@ KEY_UNDO = 'u'
 KEY_REDO = 'r'
 #KEY_LABELS = 'l'
 KEY_QUIT = 'q'
-KEY_HOME = 'h'
+KEY_HOME = 't'
 KEY_QUALITY_GOOD = '1'
 KEY_QUALITY_MEDIUM = '2'
 KEY_QUALITY_BAD = '3'
@@ -20,7 +20,9 @@ KEY_ANNOTATION_HIGHLIGHT = 'a'
 KEY_ANNOTATION_NOTE = 's'
 KEY_ANNOTATION_UNDERLINE = 'd'
 KEY_ANNOTATION_STRIKETHROUGH = 'f'
-KEY_ANNOTATION_OTHER = 'g'
+KEY_ANNOTATION_INLINE = 'g'
+KEY_ANNOTATION_ARROW = 'h'
+KEY_ANNOTATION_OTHER = 'j'
 KEY_PEN_HIGHLIGHTER = 'c'
 KEY_PEN_SHARPIE = 'v'
 KEY_PEN_BALLHEAD = 'b'
@@ -234,6 +236,10 @@ def on_press(event):
         current_type = 'underline'
     elif event.key == KEY_ANNOTATION_STRIKETHROUGH:
         current_type = 'strikethrough'
+    elif event.key == KEY_ANNOTATION_INLINE:
+        current_type = 'inline'
+    elif event.key == KEY_ANNOTATION_ARROW:
+        current_type = 'arrow'
     elif event.key == KEY_ANNOTATION_OTHER:
         current_type = 'other'
     elif event.key == KEY_PEN_HIGHLIGHTER:
@@ -297,6 +303,7 @@ plt.rcParams['keymap.fullscreen'].remove('f')
 plt.rcParams['keymap.yscale'].remove('l')
 plt.rcParams['keymap.quit'].remove('q')
 plt.rcParams['keymap.home'].remove('r')
+plt.rcParams['keymap.home'].remove('h')
 plt.rcParams['keymap.back'].remove('c')
 plt.rcParams['keymap.forward'].remove('v')
 plt.rcParams['keymap.grid'].remove('g')
