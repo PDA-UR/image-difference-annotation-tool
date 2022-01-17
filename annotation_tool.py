@@ -49,73 +49,49 @@ if(len(sys.argv) < 3):
     print('usage: python3 annotation_tool.py image1 image2')
     sys.exit(0)
 
+# read images from paths
 path_img_1 = sys.argv[1]
 path_img_2 = sys.argv[2]
 img_1 = plt.imread(path_img_1)
 img_2 = plt.imread(path_img_2)
 
+# if no path for the result csv was passed, generate it from image paths
 if(len(sys.argv) > 3):
     scan_id = sys.argv[3]
 else:
     scan_id = path_img_1.split('/')[-1].split('.')[0]
     scan_id = scan_id.replace('_RGB', '').replace('_annotation', '')
 
+# quality levels, annotation types, pen types and colors
 qualities = ['good', 'medium', 'bad', 'false_positive']
-types = ['highlight', 'note', 'underline', 'strikethrough']
+types = ['highlight', 'note', 'underline', 'strikethrough', 'inline', 'arrow', 'other']
 pens = ['highlighter', 'sharpie', 'ballhead']
 pen_colors = dict()
 pen_colors['highlighter'] = ['yellow', 'pink', 'green', 'blue']
 pen_colors['sharpie'] = ['black', 'blue', 'green', 'red']
 pen_colors['ballhead'] = ['black', 'blue']
 
+# initial values
 current_quality = qualities[0]
 current_type = types[0]
 current_pen = pens[0]
 pen_color_index = 0
-#show_labels = True
 
+# data frames to store annotations and undo stack
 annotations = pd.DataFrame(columns=['x', 'y', 'type', 'quality', 'pen'])
 annotations_undo_stack = pd.DataFrame(columns=['x', 'y', 'type', 'quality', 'pen'])
 
+# add annotation to data frame
 def create_annotation(x, y, t, q, p):
     global annotations
     annotations = annotations.append({'x' : x, 'y' : y, 'type' : t, 'quality' : q, 'pen' : p}, ignore_index=True)
 
+# save result to csv
 def save_annotations():
     annotations['scan_id'] = scan_id
     annotations.to_csv(sys.stdout, index_label='id')
 
-def create_description_old(ax):
-    x_size = ax.get_xlim()[1]
-    y_size = ax.get_ylim()[0]
-
-    x_pos = -0.8 * x_size
-    x_offset_key = x_pos
-    x_offset_text = x_pos + (x_size / 15)
-    x_offset_indicator = x_pos + (x_size * 0.4)
-
-    y_pos = 0.1 * y_size
-
-    for key, text in ui_text.items():
-        color = 'black'
-
-        plt.text(x_offset_key, y_pos, f'{key}', fontsize=18, c=color)
-        plt.text(x_offset_text, y_pos, f'{text}', fontsize=18, c=color)
-
-        y_pos += (y_size / 20)
-
-    y_pos += (y_size / 20)
-
-    plt.text(x_offset_key, y_pos, 'current quality:', fontsize=18, c=color)
-    quality_label = ax.text(x_offset_indicator, y_pos, f'{current_quality}', fontsize=18, c=color, bbox=dict(facecolor='white', linewidth=0, alpha=1))
-
-    y_pos += (y_size / 20)
-    plt.text(x_offset_key, y_pos, 'current quality:', fontsize=18, c=color)
-    type_label = ax.text(x_offset_indicator, y_pos, f'{current_type}', fontsize=18, c=color, bbox=dict(facecolor='white', linewidth=0, alpha=1))
-
-
-    return quality_label, type_label
-
+# creates UI on the left hand side
 def create_description(ax):
     x_size = 1
     y_size = 1
@@ -128,6 +104,7 @@ def create_description(ax):
     y_pos = 0.1 * y_size
     y_margin_constant = 25
 
+    # functions + shortcut
     for key, text in ui_text.items():
         color = 'black'
 
@@ -136,27 +113,27 @@ def create_description(ax):
 
         y_pos += (y_size / y_margin_constant)
 
+    # current state
     y_pos += (y_size / y_margin_constant)
     ax.text(x_offset_key, y_pos, 'current selection:', fontsize=18, c=color)
+
     y_pos += (y_size / y_margin_constant)
     quality_label = ax.text(x_offset_key, y_pos, f'{current_quality} quality', fontsize=18, c=color, bbox=dict(facecolor='white', linewidth=0, alpha=1))
+
     y_pos += (y_size / y_margin_constant)
     type_label = ax.text(x_offset_key, y_pos, f'{current_type}', fontsize=18, c=color, bbox=dict(facecolor='white', linewidth=0, alpha=1))
+
     y_pos += (y_size / y_margin_constant)
     ax.text(x_offset_key, y_pos, 'current pen:', fontsize=18, c=color)
+
     y_pos += (y_size / y_margin_constant)
     pen_label = ax.text(x_offset_key, y_pos, f'{current_pen}, {pen_colors[current_pen][pen_color_index]}', fontsize=18, c=color, bbox=dict(facecolor='white', linewidth=0, alpha=1))
 
-
+    # return references to UI elements so they can be updated later
     return quality_label, type_label, pen_label
 
 def update_plot():
-    global annotation_plot, annotations, qualities #, show_labels
-
-    #x_size = ax.get_xlim()[1]
-    #y_size = ax.get_ylim()[0]
-    #x_offset_label = x_size * 0.02
-    #y_offset_label = y_size * 0.02
+    global annotation_plot, annotations, qualities
 
     for quality in qualities:
         df = annotations[annotations['quality'] == quality]
@@ -173,11 +150,7 @@ def update_plot():
     fig.canvas.update()
     fig.canvas.flush_events()
 
-    # annotations disabled for now, as they get redrawn over and over again
-    #if(show_labels):
-    #    for index, row in annotations.iterrows():
-    #        ax.annotate(row['type'], xy=(row['x'], row['y']), xytext=(row['x'] + x_offset_label, row['y'] + y_offset_label))
-
+# undo last annotation
 def undo():
     global annotations, annotations_undo_stack
     annotations_undo_stack = annotations_undo_stack.append(annotations[-1:])
@@ -185,6 +158,7 @@ def undo():
     update_plot()
     fig.canvas.draw_idle()
 
+# redo last undone annotation
 def redo():
     global annotations, annotations_undo_stack
     annotations = annotations.append(annotations_undo_stack[-1:])
@@ -192,31 +166,20 @@ def redo():
     update_plot()
 
 def on_press(event):
-    global current_quality
-    global current_type
-    global current_pen
-    global pen_colors
-    global pen_color_index
-    global quality_label
-    global type_label
-    global pen_label
-    global show_labels
+    global current_quality, current_type, current_pen
+    global pen_colors, pen_color_index
+    global quality_label, type_label, pen_label
     global ax_image
 
     if event.key == KEY_SWAP:
+        # swap between both images
         img_handle_1.set_visible(not img_handle_1.get_visible())
         img_handle_2.set_visible(not img_handle_2.get_visible())
-        #ax_image.draw_artist(img_handle_1)
-        #ax_image.draw_artist(img_handle_2)
-        #fig.canvas.blit(ax_image.bbox)
         fig.canvas.draw()
     elif event.key == KEY_UNDO:
         undo()
     elif event.key == KEY_REDO:
         redo()
-    #elif event.key == KEY_LABELS:
-    #    show_labels = not show_labels
-    #    update_plot()
     elif event.key == KEY_QUIT:
         save_annotations()
         sys.exit(0)
@@ -243,6 +206,7 @@ def on_press(event):
     elif event.key == KEY_ANNOTATION_OTHER:
         current_type = 'other'
     elif event.key == KEY_PEN_HIGHLIGHTER:
+        # swap between colors if key for already selected pen is pressed
         if current_pen == 'highlighter':
             pen_color_index = (pen_color_index + 1) % len(pen_colors[current_pen])
         else:
@@ -285,9 +249,11 @@ def on_click(event):
         update_plot()
         #fig.canvas.draw()
 
+# left: UI, right: image
 fig, axes = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 2.5]})
 plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
 
+# 0/0 is top left
 ax_description = axes[0]
 ax_description.invert_yaxis()
 ax_description.axis('off')
@@ -295,9 +261,11 @@ ax_description.axis('off')
 ax_image = axes[1]
 ax_image.axis('off')
 
+# add event handlers
 fig.canvas.mpl_connect('key_press_event', on_press)
 plt.connect('button_press_event', on_click)
 
+# remove pyplot keybindings that are used in the application
 plt.rcParams['keymap.save'].remove('s')
 plt.rcParams['keymap.fullscreen'].remove('f')
 plt.rcParams['keymap.yscale'].remove('l')
@@ -308,10 +276,12 @@ plt.rcParams['keymap.back'].remove('c')
 plt.rcParams['keymap.forward'].remove('v')
 plt.rcParams['keymap.grid'].remove('g')
 
+# one image is always shown, the other one is always hidden
 img_handle_1 = axes[1].imshow(img_1)
 img_handle_2 = axes[1].imshow(img_2)
 img_handle_2.set_visible(False)
 
+# dots for annotations
 annotation_plot = {}
 annotation_plot['good'] = ax_image.scatter([], [], s=50, c='lime', edgecolors='black')
 annotation_plot['medium'] = ax_image.scatter([], [], s=50, c='yellow', edgecolors='black')
